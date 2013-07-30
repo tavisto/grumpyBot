@@ -1,8 +1,11 @@
 var sys = require('sys'),
     irc = require('irc'),
     request = require('request'),
-    client = new irc.Client('irc.freenode.net','__grumpyBot',{userName:'foaas',realName:'FOAAS',channels:['##hrwarningbell']});
+    creds = require('./credentials'),
+    client = new irc.Client('irc.freenode.net',creds.botName,{userName:'foaas',realName:'FOAAS',channels:['##hrwarningbell']});
 
+
+client.addListener('join', function(channel, nick, message) { client.say('nickserv','identify '+creds.botPass);});
 
 client.addListener('error', function(message) {
     console.error('ERROR: %s: %s', message.command, message.args.join(' '));
