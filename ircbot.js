@@ -32,8 +32,7 @@ client.addListener('error', function(message) {
 });
 
 
-//client.addListener('message##hrwarningbell',function(to,mess,message) {
-client.addListener('message##baz_test',function(to,mess,message) {
+client.addListener('message##hrwarningbell',function(to,mess,message) {
 	var from = '__grumpyBot',
 	    mesg = '';
 
