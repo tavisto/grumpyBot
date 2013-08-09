@@ -67,6 +67,27 @@ client.addListener('message##hrwarningbell',function(to,mess,message) {
             }
 		} else if (mess.match(/help/i)) {
 					client.say(message.args[0],"No.");
+        } else if (tokenArray[1]=='xkcd') {
+            if (typeof tokenArray[2]!=='undefined') {
+                if(tokenArray[2]%1===0) {
+                    //Get that XKCD
+                    request('http://xkcd.com/'+tokenArray[2]+'/info.0.json',function(error,reponse,body) {
+                           // client.say(message.args[0],body);
+                           var xkcd = JSON.parse(body);
+                           client.say(message.args[0],xkcd.safe_title);
+                           client.say(message.args[0],xkcd.img);
+                           client.say(message.args[0],'<'+xkcd.alt+'>');
+                    });
+                }
+            } else {
+                 request('http://xkcd.com/info.0.json',function(error,reponse,body) {
+                       // client.say(message.args[0],body);
+                       var xkcd = JSON.parse(body);
+                       client.say(message.args[0],xkcd.safe_title);
+                       client.say(message.args[0],xkcd.img);
+                       client.say(message.args[0],'<'+xkcd.alt+'>');
+                });
+            }
         }
 
 		if(mesg!=='') {				
