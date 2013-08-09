@@ -7,14 +7,12 @@ var sys = require('sys'),
     dingWords = require('./models/ding'),
     dingWordsListen = [],
     client = new irc.Client('irc.freenode.net',creds.botName,{userName:'foaas',realName:'FOAAS',channels:['##hrwarningbell']});
-    //client = new irc.Client('irc.freenode.net',creds.botName,{userName:'foaas',realName:'FOAAS',channels:['##baz_test']}),
-
+    tokenizer = require('./tokenizer');
     errors = require('./errors');
 
 
 var dingWordsRegexpString = ''; 
 
-//Mongoose set up
 mongoose.connect('mongodb://localhost/grumpydb');
 
 
@@ -31,35 +29,42 @@ client.addListener('error', function(message) {
     console.error('ERROR: %s: %s', message.command, message.args.join(' '));
 });
 
-
+client.addListener('pm',function(nick,text,message) {
+    client.say('##hrwarningbell',nick+" is tellin' me secret shiz!");
+});
 client.addListener('message##hrwarningbell',function(to,mess,message) {
 	var from = '__grumpyBot',
 	    mesg = '';
 
-	 
-
 	if(mess.match(/^grumpy/i)) {
-		console.log("Message for me");
-			
-		if(mess.match(/fuck off/i)) {
-			mesg = "/off/"+message.nick+"/__grumpyBot";	
-		} else if (mess.match(/fuck you/i)) {
-			mesg = "/you/"+message.nick+"/__grumpyBot";	
-		} else if (mess.match(/ding/i)) {
-			console.log("Adding new ding word");
-			newDing = new dingWords();
-			newDing.word = mess.substring(12);
+        var tokenArray = tokenizer(mess);
 
-			newDing.save(function(err) {
-				if(err) {
-                    var r = Math.floor(Math.random()*6)
-					client.say(message.args[0],errors[r]);
-				} else {
-                    client.say(message.args[0],message.nick+" "+newDing.word+" added");
-                    dingWordsListen.push(newDing.word);
-                }
-				
-			});
+		if(tokenArray[1]=='fuck' && tokenArray[2]=='off') {
+			mesg = "/off/"+message.nick+"/__grumpyBot";	
+		} else if(tokenArray[1]=='fuck' && tokenArray[2]=='you') {
+			mesg = "/you/"+message.nick+"/__grumpyBot";	
+		} else if (tokenArray[1]=='ding') {
+            if(message.nick=='tavisto') {
+                client.say(message.args[0],"Fuck off Tavisto");
+                return;
+            }
+			newDing = new dingWords();
+            tokenArray.shift();
+            tokenArray.shift();
+			newDing.word = tokenArray.join(" ");
+            if(newDing.word.match(/\^|\\w|\\d|\\s|\\b|\\0|\\n|\\f|\\r|\\t|\\v|\\x|\\u|\*|\.\?/i)) {
+                errorMessage(message.args[0]);
+            } else {
+                newDing.save(function(err) {
+                    if(err) {
+                        errorMessage(message.args[0]);
+                    } else {
+                        client.say(message.args[0],message.nick+" "+newDing.word+" added");
+                        dingWordsListen.push(newDing.word);
+                    }
+                    
+                });
+            }
 		} else if (mess.match(/help/i)) {
 					client.say(message.args[0],"No.");
         }
@@ -71,6 +76,29 @@ client.addListener('message##hrwarningbell',function(to,mess,message) {
 		} 
 	} else if(mess.match(new RegExp(dingWordsListen.join('|'),'i'))) {
 		client.say(message.args[0],'**DING!!!!!**');
-	}	
+	} else if(mess.match(/Is it time for beer yet\?/i)) {
+        var d = new Date();
+        if(d.getDay()==5) {
+            if(d.getUTCHours()-6>15) {
+                client.say(message.args[0],"Why aren't you drinking?.");
+            } else {
+                var timeLeft=15-(d.getUTCHours()-6);
+                var timeUnit = 'hours';
+                if(timeLeft==1) {
+                    timeLeft=60-d.getUTCMinutes();
+                    timeUnit = 'minutes';
+                }
+                client.say(message.args[0],"No. You still have "+timeLeft+" "+timeUnit+" to wait.");
+            }
+        } else {
+            client.say(message.args[0],"No.");
+        }
+    }
 });
+
+function errorMessage(channel) {
+    var r = Math.floor(Math.random()*6)
+    client.say(channel,errors[r]);
+}
+
 
