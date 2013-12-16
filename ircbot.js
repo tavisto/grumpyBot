@@ -44,14 +44,14 @@ client.addListener('message##hrwarningbell',function(to,mess,message) {
 		} else if(tokenArray[1]=='fuck' && tokenArray[2]=='you') {
 			mesg = "/you/"+message.nick+"/__grumpyBot";	
 		} else if (tokenArray[1]=='ding') {
-            if(message.nick=='tavisto') {
-                client.say(message.args[0],"Fuck off Tavisto");
-                return;
-            }
+            
 			newDing = new dingWords();
             tokenArray.shift();
             tokenArray.shift();
 			newDing.word = tokenArray.join(" ");
+            if(newDing.word.length==0) {
+                return;
+            }
             if(newDing.word.match(/\^|\\w|\\d|\\s|\\b|\\0|\\n|\\f|\\r|\\t|\\v|\\x|\\u|\*|\.\?/i)) {
                 errorMessage(message.args[0]);
             } else {
@@ -67,6 +67,8 @@ client.addListener('message##hrwarningbell',function(to,mess,message) {
             }
 		} else if (mess.match(/help/i)) {
 					client.say(message.args[0],"No.");
+        } else if (mess.match(/list/i)) {
+            client.say(message.args[0],dingWordsListen.join(','));
         } else if (tokenArray[1]=='xkcd') {
             if (typeof tokenArray[2]!=='undefined') {
                 if(tokenArray[2]%1===0) {
